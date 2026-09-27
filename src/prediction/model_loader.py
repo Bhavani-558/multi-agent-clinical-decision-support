@@ -82,7 +82,10 @@ class ModelLoader:
         "Stroke": ["gender", "ever_married", "work_type", "Residence_type", "smoking_status"]
     }
 
-    def __init__(self, models_root_dir: str = r"d:\MultiAgent_CDSS\models"):
+    def __init__(self, models_root_dir: Optional[str] = None):
+        if models_root_dir is None:
+            models_root_dir = str(Path(__file__).resolve().parents[2] / "models")
+
         self.models_root_dir = models_root_dir
         self._loaded_models: Dict[str, ModelMetadata] = {}
 
