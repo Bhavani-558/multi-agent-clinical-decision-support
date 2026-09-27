@@ -1,25 +1,25 @@
-# Core Dependencies
+# Core
 python-dotenv>=1.0.0
 pydantic>=2.0.0
 supabase>=2.0.0
 
-# Future ML & Analytics (Module Foundation)
-# numpy
-# pandas
-# scikit-learn
-# xgboost
-# shap
-
-# Future Graph Database & Knowledge Base
-# neo4j
-
-# Future Testing & App Framework
-pytest>=7.0.0
-uvicorn
+# Web
 fastapi
-scikit-learn
+uvicorn
 
-joblib
+# Data & ML
+numpy
 pandas
+scikit-learn
+xgboost
+joblib
 shap
+
+# Knowledge Graph
+neo4j
+
+# LLM
 groq
+
+# Testing
+pytest>=7.0.0
