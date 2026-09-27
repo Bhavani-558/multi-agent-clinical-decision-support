@@ -16,3 +16,4 @@ supabase>=2.0.0
 # Future Testing & App Framework
 pytest>=7.0.0
 uvicorn
+fastapi
