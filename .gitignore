@@ -37,6 +37,17 @@ env/
 # Data files (keep directory structure via .gitkeep)
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/diagnosed_cbc_data_v4.csv
+!data/raw/BreastCancer_Data.csv
+!data/raw/indian_liver_patient.csv
+!data/raw/diabetes_prediction_dataset.csv
+!data/raw/Heart_Disease_Prediction.csv
+!data/raw/hepatitis.data
+!data/raw/Chronic_Kidney.csv
+!data/raw/survey lung cancer.csv
+!data/raw/parkinsons.data
+!data/raw/healthcare-dataset-stroke-data.csv
+
 data/processed/*
 !data/processed/.gitkeep
 
