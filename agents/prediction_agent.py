@@ -14,7 +14,9 @@ class PredictionAgent:
     Agent responsible for coordinating predictions across all 10 trained disease models.
     """
 
-    def __init__(self, models_root_dir: str = r"d:\MultiAgent_CDSS\models"):
+    def __init__(self, models_root_dir: Optional[str] = None):
+        if models_root_dir is None:
+            models_root_dir = str(Path(__file__).resolve().parents[1] / "models")
         self.loader = ModelLoader(models_root_dir=models_root_dir)
         self.predictor = DiseasePredictor(loader=self.loader)
 
