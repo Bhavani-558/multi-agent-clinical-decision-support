@@ -3718,91 +3718,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        function generatePdfBlob(title, text) {
-            // Strip raw markdown artifacts if present
-            const cleanedText = (text || '')
-                .replace(/\*\*/g, '')
-                .replace(/^---$/gm, '')
-                .replace(/\| --- \|.*$/gm, '')
-                .replace(/\\([()])/g, '$1');
-            const rawLines = cleanedText.split('\n');
-            const maxLines = 46;
-            const pages = [];
-            let cur = [];
-            for (let l of rawLines) {
-                l = l.replace(/\r/g, '');
-                while (l.length > 80) {
-                    cur.push(l.slice(0, 80));
-                    l = l.slice(80);
-                    if (cur.length >= maxLines) { pages.push(cur); cur = []; }
-                }
-                cur.push(l);
-                if (cur.length >= maxLines) { pages.push(cur); cur = []; }
-            }
-            if (cur.length > 0 || pages.length === 0) pages.push(cur);
-
-            let objIndex = 3;
-            const pageObjIds = [];
-            const contentObjIds = [];
-            const contentStreams = [];
-
-            pages.forEach((pLines, pIdx) => {
-                const pObjId = objIndex++;
-                const cObjId = objIndex++;
-                pageObjIds.push(pObjId);
-                contentObjIds.push(cObjId);
-
-                let stream = 'BT\n/F1 9 Tf\n45 750 Td\n14 TL\n';
-                if (pIdx === 0 && title) {
-                    stream += '/F2 13 Tf\n(' + title.replace(/([\\()])/g, '\\\\$1') + ') Tj\nT*\n/F1 9 Tf\n';
-                }
-                pLines.forEach(line => {
-                    const asciiLine = line.replace(/[^\x20-\x7E]/g, ' ');
-                    const escaped = asciiLine.replace(/([\\()])/g, '\\\\$1');
-                    stream += '(' + escaped + ') Tj\nT*\n';
-                });
-                stream += 'ET';
-                contentStreams.push(stream);
-            });
-
-            const fontObj1 = objIndex++;
-            const fontObj2 = objIndex++;
-
-            let out = '%PDF-1.4\n';
-            const offsets = [];
-
-            function addObj(id, content) {
-                offsets[id] = new TextEncoder().encode(out).length;
-                out += id + ' 0 obj\n' + content + '\nendobj\n';
-            }
-
-            addObj(1, '<< /Type /Catalog /Pages 2 0 R >>');
-            addObj(2, '<< /Type /Pages /Kids [' + pageObjIds.map(id => id + ' 0 R').join(' ') + '] /Count ' + pages.length + ' >>');
-
-            pageObjIds.forEach((pId, idx) => {
-                const cId = contentObjIds[idx];
-                addObj(pId, '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 ' + fontObj1 + ' 0 R /F2 ' + fontObj2 + ' 0 R >> >> /Contents ' + cId + ' 0 R >>');
-            });
-
-            contentObjIds.forEach((cId, idx) => {
-                const stream = contentStreams[idx];
-                const len = new TextEncoder().encode(stream).length;
-                addObj(cId, '<< /Length ' + len + ' >>\nstream\n' + stream + '\nendstream');
-            });
-
-            addObj(fontObj1, '<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>');
-            addObj(fontObj2, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
-
-            const xrefOffset = new TextEncoder().encode(out).length;
-            out += 'xref\n0 ' + (objIndex) + '\n0000000000 65535 f \n';
-            for (let i = 1; i < objIndex; i++) {
-                const off = String(offsets[i] || 0).padStart(10, '0');
-                out += off + ' 00000 n \n';
-            }
-            out += 'trailer\n<< /Size ' + objIndex + ' /Root 1 0 R >>\nstartxref\n' + xrefOffset + '\n%%EOF';
-            return new Blob([new TextEncoder().encode(out)], { type: 'application/pdf' });
-        }
-
         const diseaseCode = report.disease || state.selectedDisease?.id || 'disease';
         const patId = metadata.patient_id || 'PATIENT';
 
@@ -3835,21 +3750,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     a.remove();
                     window.URL.revokeObjectURL(url);
                 } catch (err) {
-                    console.warn('Backend PDF export failed, falling back to client-side renderer:', err);
-                    try {
-                        const diseaseName = (report.disease_name || state.selectedDisease?.name || diseaseCode).toUpperCase();
-                        const pdfBlob = generatePdfBlob(`CLINICAL REPORT: ${diseaseName}`, reportContent);
-                        const url = window.URL.createObjectURL(pdfBlob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `Clinical_Report_${diseaseCode}_${patId}.pdf`;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        window.URL.revokeObjectURL(url);
-                    } catch (fallbackErr) {
-                        alert('PDF download error: ' + fallbackErr.message);
-                    }
+                    alert('PDF download error: ' + err.message);
                 }
             });
         }
