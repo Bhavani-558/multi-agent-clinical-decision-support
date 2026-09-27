@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiAgent CDSS — Clinical Decision Support Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css?v=24.0">
+</head>
+
+<body class="dark-theme">
+    <div class="app-background">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <div id="app" class="container">
+        <!-- Top Navigation Bar -->
+        <header class="navbar">
+            <div class="brand">
+                <span class="brand-logo">🩺</span>
+                <div class="brand-text">
+                    <span class="brand-name">MultiAgent <span class="accent-text">CDSS</span></span>
+                    <span class="brand-sub">Clinical Decision Support System</span>
+                </div>
+            </div>
+
+            <!-- Persistent Main Navigation Bar (Visible across all authenticated screens) -->
+            <nav id="main-persistent-nav" class="main-persistent-nav hidden">
+                <button type="button" id="nav-btn-home" class="nav-item-btn active" title="Home Dashboard">
+                    <span>Home</span>
+                </button>
+                <button type="button" id="nav-btn-patient-data" class="nav-item-btn" title="Patient Data & Disease Selection">
+                    <span>Patient Data</span>
+                </button>
+                <button type="button" id="nav-btn-analysis" class="nav-item-btn" title="Clinical Parameter Analysis">
+                    <span>Analysis</span>
+                </button>
+                <button type="button" id="nav-btn-reports" class="nav-item-btn" title="Clinical Decision Reports">
+                    <span>Reports</span>
+                </button>
+                <button type="button" id="nav-btn-history" class="nav-item-btn" title="Doctor & Patient History">
+                    <span>History</span>
+                </button>
+            </nav>
+
+            <!-- Authenticated Physician Profile (Shown only after successful login) -->
+            <div id="user-profile" class="user-profile hidden">
+                <span id="user-avatar" class="user-avatar">👨‍⚕️</span>
+                <div class="user-info">
+                    <span id="nav-doctor-name" class="user-name">Physician</span>
+                    <span id="nav-doctor-role" class="user-role">Clinical Specialist</span>
+                </div>
+                <button id="btn-logout" class="btn-logout" title="Sign Out">Logout</button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-viewport">
+
+            <!-- SCREEN 1: DOCTOR LOGIN (Clean, Centered Clinical Layout) -->
+            <section id="screen-login" class="screen active">
+                <div class="login-wrapper">
+                    <div class="glass-card login-card">
+                        <div class="login-header">
+                            <h2>Physician Account Access</h2>
+                        </div>
+
+                        <!-- Login Alert Boxes -->
+                        <div id="login-success" class="alert-success hidden"></div>
+                        <div id="login-alert" class="alert-danger hidden"></div>
+
+                        <form id="login-form" class="login-form">
+                            <div class="form-group">
+                                <label for="login-id">Doctor ID / Email</label>
+                                <input type="email" id="login-id" placeholder="doctor@hospital.org"
+                                    autocomplete="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-pass">Password</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="login-pass" placeholder="••••••••••••"
+                                        autocomplete="current-password" required>
+                                    <button type="button" id="btn-toggle-password" class="btn-toggle-pass"
+                                        title="Toggle Password Visibility" aria-label="Toggle Password Visibility">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" id="btn-login" class="btn btn-primary btn-block">
+                                <span>Sign In to Dashboard</span>
+                                <span class="btn-icon">→</span>
+                            </button>
+                        </form>
+
+                        <div class="auth-switch-box">
+                            <span>Don't have an account?</span>
+                            <button type="button" id="btn-goto-register" class="btn-link">Create Account</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN 1B: DOCTOR ACCOUNT REGISTRATION -->
+            <section id="screen-register" class="screen hidden">
+                <div class="login-wrapper">
+                    <div class="glass-card login-card">
+                        <div class="login-header">
+                            <h2>Create Physician Account</h2>
+                            <p class="login-sub-text">Register credentials for CDSS System access</p>
+                        </div>
+
+                        <!-- Registration Failure Alert Box -->
+                        <div id="register-alert" class="alert-danger hidden"></div>
+
+                        <form id="register-form" class="login-form">
+                            <div class="form-group">
+                                <label for="reg-name">Username</label>
+                                <input type="text" id="reg-name" placeholder="Dr. Sarah Jenkins" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-email">Email</label>
+                                <input type="email" id="reg-email" placeholder="doctor@hospital.org"
+                                    autocomplete="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-specialty">Specialty</label>
+                                <input type="text" id="reg-specialty" placeholder="Cardiology & Clinical Support"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-gender">Gender</label>
+                                <select id="reg-gender" required>
+                                    <option value="female">Female</option>
+                                    <option value="male" selected>Male</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-pass">New Password</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="reg-pass" placeholder="At least 8 characters"
+                                        autocomplete="new-password" required>
+                                    <button type="button" id="btn-toggle-reg-pass" class="btn-toggle-pass"
+                                        title="Toggle Password Visibility" aria-label="Toggle Password Visibility">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-confirm-pass">Confirm Password</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="reg-confirm-pass" placeholder="Re-enter password"
+                                        autocomplete="new-password" required>
+                                    <button type="button" id="btn-toggle-reg-confirm" class="btn-toggle-pass"
+                                        title="Toggle Password Visibility" aria-label="Toggle Password Visibility">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" id="btn-register" class="btn btn-primary btn-block">
+                                <span>Create Account</span>
+                                <span class="btn-icon">✓</span>
+                            </button>
+                        </form>
+
+                        <div class="auth-switch-box">
+                            <span>Already registered?</span>
+                            <button type="button" id="btn-goto-login" class="btn-link">Back to Login</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN 1C: HOME PAGE (LANDING DASHBOARD) -->
+            <section id="screen-home" class="screen hidden">
+                <div class="home-page-container">
+                    <!-- 1. Welcome Section -->
+                    <div class="glass-card home-hero-card">
+                        <div class="home-hero-left">
+                            <h1 class="home-hero-title">Multi-Agent Clinical Decision Support System</h1>
+                            <p class="home-hero-subtitle">Trustworthy Healthcare Intelligence</p>
+                            <p class="home-hero-description">
+                                An AI-powered clinical decision support platform that integrates disease-specific machine learning, SHAP-based explainability, biomedical knowledge graphs and multi-agent reasoning to provide transparent, evidence-aware decision support.
+                            </p>
+                            <div class="home-hero-cta">
+                                <button type="button" id="btn-home-hero-patient-details" class="btn btn-secondary btn-large btn-hero-patient-data">
+                                    <span>Enter Clinical Workspace</span>
+                                    <span class="btn-icon">→</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="home-hero-right">
+                            <img src="/static/wide_rectangular_ui_website_app_dashboard_hero_ban.png" 
+                                 alt="Medical AI Decision Support Visual" 
+                                 class="home-hero-image"
+                                 loading="eager">
+                        </div>
+                    </div>
+
+                    <!-- 2. Exactly 5 Capability Cards -->
+                    <div class="glass-card home-section-card">
+                        <div class="home-section-header">
+                            <div>
+                                <h2>System Capabilities</h2>
+                                <p class="home-section-desc">Intelligent multi-agent healthcare decision support</p>
+                            </div>
+                        </div>
+
+                        <div class="home-capabilities-grid">
+                            <div class="home-capability-card">
+                                <div class="capability-icon">📊</div>
+                                <h3>Disease Prediction</h3>
+                                <p>Multi-model disease risk prediction across 10 specialized clinical domains.</p>
+                                <span class="capability-tag">ML Ensembles</span>
+                            </div>
+
+                            <div class="home-capability-card">
+                                <div class="capability-icon">🔬</div>
+                                <h3>Explainable AI</h3>
+                                <p>SHAP-based feature attribution revealing key clinical risk drivers.</p>
+                                <span class="capability-tag">SHAP Analysis</span>
+                            </div>
+
+                            <div class="home-capability-card">
+                                <div class="capability-icon">🧬</div>
+                                <h3>Biomedical Evidence</h3>
+                                <p>Neo4j + PrimeKG integration for biomedical evidence and disease relationships.</p>
+                                <span class="capability-tag">Knowledge Graph</span>
+                            </div>
+
+                            <div class="home-capability-card">
+                                <div class="capability-icon">🛡️</div>
+                                <h3>Trust & Validation</h3>
+                                <p>Contradiction detection, evidence alignment, and trust scoring.</p>
+                                <span class="capability-tag">Consensus Scoring</span>
+                            </div>
+
+                            <div class="home-capability-card">
+                                <div class="capability-icon">🧠</div>
+                                <h3>Multi-Agent Reasoning</h3>
+                                <p>Agent orchestration combining predictions, evidence, and clinical reasoning.</p>
+                                <span class="capability-tag">Decision Fusion</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN 2: DISEASE SELECTION DASHBOARD -->
+            <section id="screen-dashboard" class="screen hidden">
+                <div class="dashboard-header">
+                    <div>
+                        <h2>Disease Selection</h2>
+                    </div>
+                    <div class="disease-filter-bar">
+                        <div class="search-input-wrapper">
+                            <svg class="search-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="disease-search" placeholder="Search disease or specialty..."
+                                class="search-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="disease-grid" class="disease-grid">
+                    <!-- Dynamic Disease Cards Injected via JS -->
+                    <div class="loading-spinner">Loading 10 CDSS Disease Models...</div>
+                </div>
+            </section>
+
+            <!-- SCREEN 2B: PATIENT DETAILS -->
+            <section id="screen-patient-details" class="screen hidden">
+                <div class="dashboard-header">
+                    <div>
+                        <h2>Patient Data</h2>
+                    </div>
+                </div>
+
+                <div class="form-layout">
+                    <div class="glass-card form-card">
+                        <div class="form-header">
+                            <div>
+                                <h2>Clinical Patient Identity</h2>
+                            </div>
+                        </div>
+
+                        <form id="patient-details-form" class="login-form">
+                            <div id="patient-detail-alert" class="alert-danger hidden"></div>
+
+                            <div class="form-group">
+                                <label for="patient-id">Patient ID</label>
+                                <input type="text" id="patient-id" placeholder="e.g. P-1001" autocomplete="off"
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="patient-name">Patient Name</label>
+                                <input type="text" id="patient-name" placeholder="e.g. Jane Smith" autocomplete="off"
+                                    required>
+                            </div>
+
+                            <div class="form-footer">
+                                <button type="button" id="btn-back-to-dashboard" class="btn btn-tertiary">Back</button>
+                                <button type="submit" id="disease-screen-continue" class="btn btn-secondary btn-large"
+                                    disabled>
+                                    <span>Continue to Disease Selection</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN 3: PATIENT INFORMATION FORM -->
+            <section id="screen-patient-form" class="screen hidden">
+                <div class="breadcrumb">
+                    <button id="btn-back-to-dash" class="btn-link" title="Back to Dashboard">←</button>
+                    <span class="breadcrumb-sep">/</span>
+                    <span id="form-breadcrumb-disease">Disease Model</span>
+                </div>
+
+                <div class="form-layout">
+                    <div class="glass-card form-card">
+                        <div class="form-header">
+                            <div class="disease-meta-badge">
+                                <span id="form-disease-icon">🩺</span>
+                                <div>
+                                    <h2 id="form-disease-title">Disease Parameters</h2>
+                                </div>
+                            </div>
+                            <div class="form-actions-top">
+                                <button type="button" id="btn-load-dataset" class="btn btn-secondary btn-load-dataset">
+                                    <span>📁 Load Clinical Record</span>
+                                </button>
+                                <button type="button" id="btn-load-demo" class="btn btn-secondary">
+                                    <span>⚡ Load Demo Patient Data</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="dataset-loaded-banner" class="dataset-loaded-banner hidden"></div>
+
+                        <form id="patient-analysis-form">
+                            <div id="patient-fields-container" class="fields-grid">
+                                <!-- Dynamically generated fields for selected disease -->
+                            </div>
+
+                            <div class="form-footer">
+                                <button type="button" id="btn-clear-fields" class="btn btn-secondary">Clear Fields</button>
+                                <button type="submit" id="btn-analyze" class="btn btn-secondary">
+                                    <span>Analyze Patient Data</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN 3B: SAVED HISTORY -->
+            <section id="screen-history" class="screen hidden">
+                <div class="history-top-nav">
+                    <div class="history-nav-left">
+                        <button type="button" id="btn-history-back-to-diseases" class="btn-back-diseases">
+                            <span>← Back to Diseases</span>
+                        </button>
+                    </div>
+                    <div class="history-nav-right">
+                        <div class="history-nav-controls">
+                            <button type="button" id="tab-doctor-history" class="history-nav-btn active">
+                                <span class="nav-btn-icon">👨‍⚕️</span>
+                                <span class="nav-btn-text">Doctor History</span>
+                            </button>
+                            <button type="button" id="tab-patient-history" class="history-nav-btn">
+                                <span class="nav-btn-icon">👤</span>
+                                <span class="nav-btn-text">Patient History</span>
+                            </button>
+                        </div>
+                        <button type="button" id="btn-clear-history" class="btn-clear-history" title="Clear History Records">
+                            <span>Clear History</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW 1: DOCTOR HISTORY -->
+                <div id="view-doctor-history" class="history-view active">
+                    <!-- DOCTOR PROFILE & ANALYSIS SUMMARY BANNER -->
+                    <div class="doctor-profile-summary-card">
+                        <div class="doctor-profile-header">
+                            <div class="doctor-info-left">
+                                <div id="history-doctor-avatar" class="doctor-avatar-circle">👨‍⚕️</div>
+                                <div class="doctor-meta">
+                                    <div class="doctor-role-tag">Attending CDSS Physician</div>
+                                    <h3 id="history-doctor-name" class="doctor-name-title">Dr. Physician</h3>
+                                    <span id="history-doctor-specialty" class="doctor-specialty-pill">Clinical
+                                        Specialist</span>
+                                </div>
+                            </div>
+                            <div class="doctor-stats-grid">
+                                <div class="doctor-stat-box">
+                                    <span class="stat-label">Patients Analysed</span>
+                                    <strong id="stat-patients-count" class="stat-value">0</strong>
+                                </div>
+                                <div class="doctor-stat-box">
+                                    <span class="stat-label">Total Analyses</span>
+                                    <strong id="stat-analyses-count" class="stat-value">0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEARCH & SECTION TITLE (Placed neatly below Doctor Summary) -->
+                    <div class="history-controls-bar">
+                        <div class="history-controls-title">
+                            <h2>Doctor Clinical Analyses</h2>
+                            <p id="history-sub-summary" class="history-subtitle">Individual diagnostic evaluations
+                                recorded for this physician.</p>
+                        </div>
+                        <div class="history-search-wrapper">
+                            <div class="search-input-wrapper">
+                                <svg class="search-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" id="history-search" placeholder="Search Patient ID or Name..."
+                                    class="search-input history-search-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="history-container-card">
+                        <div id="history-list" class="history-list"></div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: PATIENT HISTORY -->
+                <div id="view-patient-history" class="history-view hidden">
+                    <div class="dashboard-header history-view-header">
+                        <div>
+                            <h2>Patient Longitudinal History</h2>
+                            <p class="history-subtitle">Chronological progression of diagnostic analyses for a selected
+                                patient.</p>
+                        </div>
+                        <div class="disease-filter-bar">
+                            <div class="patient-select-wrapper">
+                                <select id="patient-history-select" class="search-input patient-select"
+                                    aria-label="Select Patient">
+                                    <option value="">-- Choose Patient --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card history-container-card">
+                        <div id="patient-summary-banner" class="patient-summary-banner hidden"></div>
+                        <div id="patient-history-detail" class="history-detail hidden"></div>
+                        <div id="patient-history-list" class="history-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN 4: RESULTS DISPLAY (7-SECTION CLINICAL REPORT) -->
+            <section id="screen-results" class="screen hidden">
+                <div class="breadcrumb results-breadcrumb-bar">
+                    <div class="breadcrumb-left">
+                        <button id="btn-back-to-form" class="btn-link" title="Edit Patient Data">←</button>
+                        <button id="btn-back-to-history" class="btn btn-secondary btn-sm hidden"
+                            title="Back to Saved History">← Back to History</button>
+                        <span class="breadcrumb-sep">/</span>
+                        <span>Clinical Decision Support Report</span>
+                    </div>
+                </div>
+
+                <div id="report-container" class="report-viewport">
+                    <!-- Dynamic 7-Section Report Content Injected via JS -->
+                    <div class="loading-spinner">Analyzing Patient Data...</div>
+                </div>
+            </section>
+
+            <!-- MODAL: CONFIRM CLEAR HISTORY -->
+            <div id="modal-clear-history" class="modal-backdrop hidden" role="dialog" aria-modal="true"
+                aria-labelledby="modal-clear-history-title">
+                <div class="glass-card modal-container modal-compact">
+                    <div class="modal-header">
+                        <div class="modal-title-group">
+                            <h3 id="modal-clear-history-title">Clear History</h3>
+                        </div>
+                        <button type="button" id="btn-close-clear-history-modal" class="btn-close-modal"
+                            aria-label="Close Modal">&times;</button>
+                    </div>
+
+                    <div class="modal-body compact-modal-body">
+                        <div id="clear-history-modal-notice" class="alert-info hidden" style="margin-bottom: 14px; font-size: 0.88rem; padding: 10px 14px; border-radius: 8px;"></div>
+                        <p style="margin-bottom: 22px; line-height: 1.5; color: var(--text-secondary); font-size: 0.95rem;">
+                            Are you sure you want to clear the history?<br>
+                            This action cannot be undone.
+                        </p>
+
+                        <div class="modal-actions-compact">
+                            <button type="button" id="btn-cancel-clear-history" class="btn btn-secondary">
+                                <span>Cancel</span>
+                            </button>
+                            <button type="button" id="btn-confirm-clear-history" class="btn btn-danger-action">
+                                <span>Clear History</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMPACT MODAL: LOAD DATA BY ROW NUMBER -->
+            <div id="modal-load-dataset" class="modal-backdrop hidden" role="dialog" aria-modal="true"
+                aria-labelledby="modal-dataset-title">
+                <div class="glass-card modal-container modal-compact">
+                    <div class="modal-header">
+                        <div class="modal-title-group">
+                            <span class="modal-icon">📋</span>
+                            <h3 id="modal-dataset-title">Select Clinical Record</h3>
+                        </div>
+                        <button type="button" id="btn-close-dataset-modal" class="btn-close-modal"
+                            aria-label="Close Modal">&times;</button>
+                    </div>
+
+                    <form id="form-load-dataset-row" class="modal-body compact-modal-body" novalidate>
+                        <div id="dataset-modal-error" class="alert-danger hidden"></div>
+
+                        <div class="form-group">
+                            <label for="dataset-row-input" id="lbl-dataset-row">Enter Clinical Record Number:</label>
+                            <input type="number" id="dataset-row-input" min="1" step="1" placeholder="e.g. 1"
+                                class="compact-row-input" autocomplete="off">
+                            <span id="dataset-row-hint" class="dataset-row-hint"></span>
+                        </div>
+
+                        <div class="modal-actions-compact">
+                            <button type="submit" id="btn-confirm-load-dataset" class="btn btn-secondary">
+                                <span>LOAD RECORD</span>
+                            </button>
+                            <button type="button" id="btn-cancel-dataset-modal" class="btn btn-secondary">
+                                <span>CANCEL</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- MODAL: COUNTERFACTUAL WHAT-IF ANALYSIS -->
+            <div id="modal-what-if" class="modal-backdrop hidden" role="dialog" aria-modal="true"
+                aria-labelledby="modal-whatif-title">
+                <div class="glass-card modal-container modal-whatif-container">
+                    <div class="modal-header whatif-header">
+                        <div class="modal-title-group">
+                            <span class="modal-icon">🔄</span>
+                            <div>
+                                <h3 id="modal-whatif-title">Counterfactual What-If Analysis</h3>
+                                <span id="whatif-disease-badge" class="whatif-disease-pill">Diabetes Mellitus</span>
+                            </div>
+                        </div>
+                        <button type="button" id="btn-close-whatif-modal" class="btn-close-modal"
+                            aria-label="Close Modal">&times;</button>
+                    </div>
+
+                    <div class="modal-body whatif-modal-body">
+                        <!-- Simulation Error Alert -->
+                        <div id="whatif-modal-error" class="alert-danger hidden"></div>
+
+                        <!-- Governance Lock Notice (Shown when disease is locked, e.g. Chronic Liver) -->
+                        <div id="whatif-lock-banner" class="whatif-lock-banner hidden">
+                            <div class="lock-icon">🔒</div>
+                            <div class="lock-content">
+                                <strong>Simulation Temporarily Locked</strong>
+                                <p id="whatif-lock-text">
+                                    What-If Simulation for Chronic Liver Disease is temporarily locked pending approval of the corrected model.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Simulation Interactive View Area -->
+                        <div id="whatif-active-content">
+                            <!-- Side-by-Side Comparison Dashboard -->
+                            <div class="whatif-comparison-dashboard">
+                                <!-- Baseline Card -->
+                                <div class="whatif-card baseline-card">
+                                    <div class="card-tag">BASELINE PREDICTION</div>
+                                    <div class="card-metric-main">
+                                        <div class="metric-big-number" id="whatif-orig-prob">--%</div>
+                                        <div class="metric-caption">Original Probability</div>
+                                    </div>
+                                    <div class="card-status-row">
+                                        <span class="status-label">Clinical Result:</span>
+                                        <span id="whatif-orig-status"
+                                            class="whatif-status-badge status-not-detected">--</span>
+                                    </div>
+                                    <div class="card-sub-info">
+                                        <span class="sub-label">Classification:</span>
+                                        <strong id="whatif-orig-label">--</strong>
+                                    </div>
+                                </div>
+
+                                <!-- Delta Center -->
+                                <div class="whatif-delta-center">
+                                    <div class="delta-arrow-indicator">➔</div>
+                                    <div id="whatif-delta-badge" class="whatif-delta-pill delta-neutral">
+                                        <span id="whatif-delta-points">0.0</span>
+                                        <span class="delta-unit">pp</span>
+                                    </div>
+                                    <div id="whatif-direction-text" class="delta-direction-sub">No Change</div>
+                                </div>
+
+                                <!-- Counterfactual Card -->
+                                <div class="whatif-card counterfactual-card">
+                                    <div class="card-tag">COUNTERFACTUAL SIMULATION</div>
+                                    <div class="card-metric-main">
+                                        <div class="metric-big-number" id="whatif-sim-prob">--%</div>
+                                        <div class="metric-caption">Simulated Probability</div>
+                                    </div>
+                                    <div class="card-status-row">
+                                        <span class="status-label">Simulated Result:</span>
+                                        <span id="whatif-sim-status"
+                                            class="whatif-status-badge status-not-detected">--</span>
+                                    </div>
+                                    <div class="card-sub-info">
+                                        <span class="sub-label">Classification:</span>
+                                        <strong id="whatif-sim-label">--</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Feature Adjustment Panel -->
+                            <div class="whatif-controls-section">
+                                <div class="section-title-row">
+                                    <h4>Modify Clinical Input Features</h4>
+                                    <span class="section-subtitle">Adjust values below to simulate impact on disease
+                                        probability:</span>
+                                </div>
+
+                                <form id="form-whatif-features" class="whatif-features-form" novalidate>
+                                    <div id="whatif-features-grid" class="whatif-features-grid">
+                                        <!-- Injected dynamically via JS based on disease schema -->
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Modified Features Breakdown Table -->
+                            <div id="whatif-diff-container" class="whatif-diff-section hidden">
+                                <h4>Modified Features Breakdown</h4>
+                                <div class="table-responsive">
+                                    <table class="whatif-diff-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Feature</th>
+                                                <th>Original Value</th>
+                                                <th>Counterfactual Value</th>
+                                                <th>Change</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="whatif-diff-tbody">
+                                            <!-- Injected dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer whatif-modal-footer">
+                        <button type="button" id="btn-reset-whatif" class="btn btn-secondary">
+                            <span>↺ Reset to Original Values</span>
+                        </button>
+                        <button type="button" id="btn-run-whatif" class="btn btn-primary">
+                            <span>⚡ Re-run Simulation</span>
+                        </button>
+                        <button type="button" id="btn-close-whatif-footer" class="btn btn-tertiary">
+                            <span>Close</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/static/app.js?v=20.0"></script>
+</body>
+
+</html>

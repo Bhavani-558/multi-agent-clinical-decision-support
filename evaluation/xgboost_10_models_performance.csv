@@ -1,0 +1,12 @@
+No.,Disease,Test Samples,Accuracy (%),Precision (%),Recall (%),F1-Score (%)
+1,Anemia,257,98.44,96.06,91.36,92.57
+2,Breast Cancer,114,97.37,100.00,92.86,96.30
+3,Chronic Liver Disease,117,63.25,41.82,67.65,51.69
+4,Diabetes,20000,97.23,100.00,67.41,80.53
+5,Heart Disease,54,83.33,80.00,83.33,81.63
+6,Hepatitis,31,80.65,95.24,80.00,86.96
+7,Chronic Kidney Disease,80,100.00,100.00,100.00,100.00
+8,Lung Cancer,62,88.71,100.00,87.04,93.07
+9,Parkinson's Disease,39,84.62,96.00,82.76,88.89
+10,Stroke,1022,73.87,13.71,82.00,23.50
+Average,10 Models,21776,86.75,82.28,83.44,79.51
