@@ -6,7 +6,8 @@ Strictly preserves all upstream scores without recalculation or hardcoded data.
 """
 
 from typing import Dict, Any, Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from src.fusion.schemas import ClinicalDecisionOutput, DecisionSupportClassification
 from src.reasoning.schemas import ReasoningOutput, EvidenceCategoryItem
 from src.knowledge.schemas import KnowledgeGraphEvidence
@@ -605,7 +606,71 @@ class ClinicalReportGenerator:
         else:
             gender = str(raw_gender).strip() if raw_gender is not None else "N/A"
 
-        date_time = str(patient_meta.get("timestamp") or patient_meta.get("analysis_date") or datetime.now().strftime("%Y-%m-%d %H:%M:%S")).strip()
+        kolkata_tz = ZoneInfo("Asia/Kolkata")
+        raw_ts = patient_meta.get("timestamp")
+        raw_analysis_date = patient_meta.get("analysis_date")
+
+        date_time = ""
+
+        if raw_ts:
+            if isinstance(raw_ts, datetime):
+                if raw_ts.tzinfo is not None:
+                    date_time = raw_ts.astimezone(kolkata_tz).strftime("%Y-%m-%d %H:%M:%S IST")
+                else:
+                    date_time = raw_ts.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                ts_str = str(raw_ts).strip()
+                has_utc_info = (
+                    "+" in ts_str
+                    or ts_str.endswith("Z")
+                    or ts_str.endswith("z")
+                    or "-00:00" in ts_str
+                    or "UTC" in ts_str.upper()
+                )
+                if has_utc_info:
+                    try:
+                        iso_clean = ts_str.replace("Z", "+00:00").replace("z", "+00:00")
+                        if iso_clean.upper().endswith("UTC"):
+                            iso_clean = iso_clean[:-3].strip() + "+00:00"
+                        dt_utc = datetime.fromisoformat(iso_clean)
+                        if dt_utc.tzinfo is None:
+                            dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+                        date_time = dt_utc.astimezone(kolkata_tz).strftime("%Y-%m-%d %H:%M:%S IST")
+                    except Exception:
+                        date_time = ts_str
+                else:
+                    date_time = ts_str
+        elif raw_analysis_date:
+            if isinstance(raw_analysis_date, datetime):
+                if raw_analysis_date.tzinfo is not None:
+                    date_time = raw_analysis_date.astimezone(kolkata_tz).strftime("%Y-%m-%d %H:%M:%S IST")
+                else:
+                    date_time = str(raw_analysis_date)
+            else:
+                date_str = str(raw_analysis_date).strip()
+                has_utc_info = (
+                    "+" in date_str
+                    or date_str.endswith("Z")
+                    or date_str.endswith("z")
+                    or "-00:00" in date_str
+                    or "UTC" in date_str.upper()
+                )
+                if has_utc_info and "T" in date_str:
+                    try:
+                        iso_clean = date_str.replace("Z", "+00:00").replace("z", "+00:00")
+                        if iso_clean.upper().endswith("UTC"):
+                            iso_clean = iso_clean[:-3].strip() + "+00:00"
+                        dt_utc = datetime.fromisoformat(iso_clean)
+                        if dt_utc.tzinfo is None:
+                            dt_utc = dt_utc.replace(tzinfo=timezone.utc)
+                        date_time = dt_utc.astimezone(kolkata_tz).strftime("%Y-%m-%d %H:%M:%S IST")
+                    except Exception:
+                        date_time = date_str
+                else:
+                    date_time = date_str
+
+        if not date_time:
+            date_time = datetime.now(kolkata_tz).strftime("%Y-%m-%d %H:%M:%S IST")
         
         disease_clean = disease.replace("_", " ").title().strip()
 
@@ -783,35 +848,21 @@ class ClinicalReportGenerator:
         lines.append(f"Model Probability: {prob_str}")
         lines.append("")
 
-        # Dynamic, patient-report-friendly Clinical Interpretation
-        disease_phrase = disease_clean.lower()
-        prob_display = str(prob_str).replace(" %", "%").strip()
-        try:
-            val_num = float(prob_display.replace("%", "").strip())
-            if "%" not in str(prob_str) and val_num <= 1.0:
-                prob_display = f"{val_num * 100:.1f}%"
-            elif not prob_display.endswith("%"):
-                prob_display = f"{val_num:.1f}%"
-        except (ValueError, TypeError):
-            pass
-
-        decision_threshold_str = "50%"
-
-        if detection_status == "DETECTED":
-            llm_paragraph = (
-                f"The model detected {disease_phrase} in this assessment. "
-                f"The estimated probability is {prob_display}, which is at or above the model’s {decision_threshold_str} "
-                f"decision threshold and therefore results in a DETECTED classification."
-            )
-        else:
-            llm_paragraph = (
-                f"The model did not detect {disease_phrase} in this assessment. "
-                f"The estimated probability is {prob_display}, which is below the model’s {decision_threshold_str} "
-                f"decision threshold and therefore results in a NOT DETECTED classification."
-            )
-
         lines.append(f"{h3}🧠 CLINICAL INTERPRETATION")
-        lines.append(llm_paragraph)
+
+        final_interp_sec = sec_dict.get("final_interpretation")
+        interp_text = ""
+        if final_interp_sec and final_interp_sec.summary_text:
+            interp_text = final_interp_sec.summary_text
+        elif llm_explanation:
+            interp_text = llm_explanation
+
+        if interp_text:
+            interp_clean = interp_text.replace("[CLINICAL INTERPRETATION]\n", "").replace("[CLINICAL INTERPRETATION]", "").strip()
+            while "\n\n\n" in interp_clean:
+                interp_clean = interp_clean.replace("\n\n\n", "\n\n")
+            if interp_clean:
+                lines.append(interp_clean)
 
         return "\n".join(lines)
 
